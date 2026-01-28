@@ -60,25 +60,31 @@ const API_BASE = 'https://api.nexcrypto.trade/v1';
 const API_KEY = 'MOaNJZ3ZitI1ZSOEf0BATXH1Q0sxP5lnbReA_LZRFbE';
 ```
 
-### 2. تعریف Strategy ها
+### 2. Strategy ها (Built-in)
+
+**نیازی به تعریف دستی نیست!** کتابخانه 500+ strategy را built-in دارد:
 
 ```javascript
-const STRATEGIES = {
-  315: {
-    id: 315,
-    name: 'Trend Line',
-    shapeType: 'trend_line',
+// نیازی به این کد نیست - همه strategy ها از قبل تعریف شده‌اند:
+// - Ichimoku: 1-30, 496-497
+// - SMA/WMA/EMA: 31-120
+// - MA Cross: 121-180
+// - RSI Divergence: 215-220, 277-278
+// - MACD Divergence: 289-292
+// - Trend Lines: 332-339
+// - Channels: 342-361
+// - Patterns: 364-495
+// و بسیاری دیگر...
+
+// فقط اگر بخواهید strategy سفارشی اضافه کنید:
+const CUSTOM_STRATEGIES = {
+  999: {
+    id: 999,
+    name: 'My Custom',
+    shapeType: 'rectangle',
     pointCount: 2,
-    colors: { buy: '#4caf50', sell: '#f44336' }
-  },
-  293: {
-    id: 293,
-    name: 'Channel Pattern',
-    shapeType: 'parallel_channel',
-    pointCount: 4,
-    colors: { buy: '#00bcd4', sell: '#e91e63' }
-  },
-  // ...
+    colors: { buy: '#00ff00', sell: '#ff00ff' }
+  }
 };
 ```
 
@@ -140,16 +146,16 @@ function initChart() {
     autosize: true
   });
 
-  tvWidget.onChartReady(() => {
-    // ساخت NXCChartShapes
+  tvWidget.onChartReady(async () => {
+    // ساخت NXCChartShapes (بدون نیاز به تعریف strategies)
     shapesManager = new NXCChartShapes.default({
       theme: 'dark',
-      showEntryMarker: true,
-      strategies: STRATEGIES
+      showEntryMarker: true
+      // strategies: CUSTOM_STRATEGIES  // فقط اگر strategy سفارشی دارید
     });
 
-    // اتصال به widget
-    shapesManager.attach(tvWidget);
+    // اتصال به widget (async)
+    await shapesManager.attach(tvWidget);
   });
 }
 ```
@@ -191,11 +197,15 @@ async function fetchAndDraw() {
   // پاک کردن شکل‌های قبلی
   shapesManager.clear();
 
-  // رسم سیگنال‌ها
-  const drawnIds = shapesManager.draw(signals);
+  // رسم سیگنال‌ها (async - برای اندیکاتورها و divergence ها)
+  const drawnIds = await shapesManager.draw(signals);
   console.log(`Drew ${drawnIds.length} shapes`);
 }
 ```
+
+**نکته مهم:** متد `draw()` الان async است چون:
+- اندیکاتورها (RSI, MACD, MA) باید اول ساخته شوند
+- بعد شکل‌هایی که روی پنل اندیکاتور هستند رسم شوند (مثل خطوط divergence)
 
 ### 7. Clear Shapes
 
@@ -237,6 +247,8 @@ function clearShapes() {
 
 ## نمونه پاسخ API
 
+### سیگنال ساده (Trend Line)
+
 ```json
 {
   "signal_id": "7e53cc19-f0dd-530f-96ae-51c941544e14",
@@ -259,6 +271,51 @@ function clearShapes() {
   "created_at": "2026-01-27T09:21:29.502959Z"
 }
 ```
+
+### سیگنال RSI Divergence
+
+```json
+{
+  "signal_id": "abc123...",
+  "strategy_id": 215,
+  "signal_type": "B",
+  "close_price": "87500.00",
+  "payload": {
+    "p1p": "88000",
+    "p1t": 1769400000,
+    "p2p": "87500",
+    "p2t": 1769450000,
+    "p3p": "48.79",
+    "p3t": 1769400000,
+    "p4p": "47.96",
+    "p4t": 1769450000,
+    "entryPoint": 1769450000
+  }
+}
+```
+
+**نتیجه:** 4 شکل رسم می‌شود:
+1. RSI Indicator (پنل جداگانه)
+2. Trend Line روی چارت قیمت (p1 → p2)
+3. Trend Line روی RSI pane (p3 → p4)
+4. Entry Marker
+
+### سیگنال MA Cross
+
+```json
+{
+  "signal_id": "xyz789...",
+  "strategy_id": 137,
+  "signal_type": "B",
+  "payload": {
+    "entryPoint": 1769450000
+  }
+}
+```
+
+**نتیجه:** 2 اندیکاتور رسم می‌شود:
+- SMA 50
+- SMA 200
 
 ## نتیجه رسم
 
@@ -299,33 +356,42 @@ Log Panel پایین صفحه اطلاعات مفیدی نشان می‌دهد:
 
 ## سفارشی‌سازی
 
-### اضافه کردن Strategy جدید
+### اضافه کردن Strategy سفارشی (اختیاری)
+
+فقط اگر strategy خاصی در built-in registry نیست:
 
 ```javascript
-const STRATEGIES = {
-  // ... موجود
-
-  // Strategy جدید
-  999: {
-    id: 999,
-    name: 'My Custom',
-    shapeType: 'rectangle',
-    pointCount: 2,
-    colors: { buy: '#00ff00', sell: '#ff00ff' }
+shapesManager = new NXCChartShapes.default({
+  theme: 'dark',
+  strategies: {
+    999: {
+      id: 999,
+      name: 'My Custom',
+      shapeType: 'rectangle',
+      pointCount: 2,
+      colors: { buy: '#00ff00', sell: '#ff00ff' }
+    }
   }
-};
+});
 ```
 
-### تغییر رنگ‌ها
+### Override کردن رنگ یک Strategy موجود
 
 ```javascript
-315: {
-  // ...
-  colors: {
-    buy: '#00e676',   // سبز روشن
-    sell: '#ff1744'   // قرمز روشن
+shapesManager = new NXCChartShapes.default({
+  strategies: {
+    315: {  // Override built-in strategy 315
+      id: 315,
+      name: 'Trend Line',
+      shapeType: 'trend_line',
+      pointCount: 2,
+      colors: {
+        buy: '#00e676',   // سبز روشن
+        sell: '#ff1744'   // قرمز روشن
+      }
+    }
   }
-}
+});
 ```
 
 ### غیرفعال کردن Entry Marker
@@ -333,7 +399,23 @@ const STRATEGIES = {
 ```javascript
 shapesManager = new NXCChartShapes.default({
   theme: 'dark',
-  showEntryMarker: false,  // ◄── غیرفعال
-  strategies: STRATEGIES
+  showEntryMarker: false  // ◄── غیرفعال
 });
 ```
+
+### انواع سیگنال‌های پشتیبانی شده
+
+| نوع | Strategy IDs | توضیح |
+|-----|--------------|-------|
+| Ichimoku | 1-30, 496-497 | ابر ایچیموکو |
+| SMA | 31-60 | میانگین متحرک ساده |
+| WMA | 61-90 | میانگین متحرک وزنی |
+| EMA | 91-120 | میانگین متحرک نمایی |
+| MA Cross | 121-180 | تقاطع میانگین‌ها |
+| RSI Divergence | 215-220, 277-278 | واگرایی RSI |
+| MACD Divergence | 289-292 | واگرایی MACD |
+| Trend Line | 332-339 | خط روند |
+| Channel | 342-361 | کانال موازی |
+| Triangle | 364-407 | الگوی مثلث |
+| ABCD | 464-465 | الگوی ABCD |
+| XABCD | 466-487 | الگوی هارمونیک |
