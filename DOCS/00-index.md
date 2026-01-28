@@ -53,28 +53,16 @@ npm install nxc-chart-shapes
 ```javascript
 import { NXCChartShapes } from 'nxc-chart-shapes';
 
-// تعریف استراتژی‌ها
-const STRATEGIES = {
-  315: {
-    id: 315,
-    name: 'Trend Line',
-    shapeType: 'trend_line',
-    pointCount: 2,
-    colors: { buy: '#4caf50', sell: '#f44336' }
-  }
-};
-
-// ساخت و اتصال
+// ساخت و اتصال (500+ strategies built-in هستند!)
 const shapes = new NXCChartShapes({
   theme: 'dark',
-  showEntryMarker: true,
-  strategies: STRATEGIES
+  showEntryMarker: true
 });
 
 await shapes.attach(widget);
 
-// رسم سیگنال‌ها
-shapes.draw(signals);
+// رسم سیگنال‌ها (async)
+await shapes.draw(signals);
 
 // پاک کردن
 shapes.clear();

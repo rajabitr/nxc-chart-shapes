@@ -185,7 +185,9 @@ export function TradingChart({
 
     if (signals.length > 0) {
       // draw() is async for indicators/divergence
-      shapesRef.current.draw(signals);
+      (async () => {
+        await shapesRef.current?.draw(signals);
+      })();
     }
   }, [signals]);
 

@@ -326,8 +326,8 @@ const widget = new TradingView.widget({
   datafeed: binanceDatafeed  // ◄── اینجا Datafeed تعریف می‌شود
 });
 
-// سپس nxc-chart-shapes
-const shapes = new NXCChartShapes({ strategies: STRATEGIES });
+// سپس nxc-chart-shapes (500+ strategies built-in هستند!)
+const shapes = new NXCChartShapes({ theme: 'dark' });
 await shapes.attach(widget);
-shapes.draw(signals);
+await shapes.draw(signals);  // async برای اندیکاتورها
 ```

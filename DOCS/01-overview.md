@@ -30,10 +30,10 @@
 
 ### با این کتابخانه:
 ```javascript
-// فقط همین!
-const shapes = new NXCChartShapes({ strategies: STRATEGIES });
-shapes.attach(widget);
-shapes.draw(signals);
+// فقط همین! (500+ strategies built-in هستند)
+const shapes = new NXCChartShapes({ theme: 'dark' });
+await shapes.attach(widget);
+await shapes.draw(signals);
 ```
 
 ## اجزای اصلی
