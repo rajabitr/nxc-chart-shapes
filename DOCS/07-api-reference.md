@@ -65,22 +65,24 @@ if (shapes.isReady()) {
 
 #### `draw(signals)`
 
-رسم سیگنال‌ها روی نمودار.
+رسم سیگنال‌ها روی نمودار. **این متد async است.**
 
 ```typescript
-shapes.draw(signals: APISignal | APISignal[]): string[]
+await shapes.draw(signals: APISignal | APISignal[]): Promise<string[]>
 ```
 
 ```javascript
 // یک سیگنال
-const ids = shapes.draw(signal);
+const ids = await shapes.draw(signal);
 
 // چند سیگنال
-const ids = shapes.draw([signal1, signal2, signal3]);
+const ids = await shapes.draw([signal1, signal2, signal3]);
 
 // خروجی: آرایه‌ای از ID های شکل‌های رسم شده
 // ['signal_abc123', 'signal_abc123_entry', ...]
 ```
+
+**چرا async؟** برای سیگنال‌های اندیکاتوری (RSI, MACD, MA) و divergence، ابتدا باید اندیکاتور ساخته شود، سپس شکل‌ها روی آن رسم شوند.
 
 ---
 
@@ -273,22 +275,45 @@ interface StrategyConfig {
 
 ```typescript
 type ShapeType =
+  // خطوط
   | 'trend_line'
   | 'horizontal_line'
   | 'vertical_line'
+  | 'extended_line'
+  // کانال‌ها و زون‌ها
   | 'parallel_channel'
   | 'rectangle'
-  | 'arrow'
-  | 'icon'
+  | 'triangle'
+  // فیبوناچی
   | 'fib_retracement'
   | 'fib_extension'
   | 'fib_trend_ext'
-  | 'triangle'
+  // الگوها
   | 'abcd_pattern'
   | 'xabcd_pattern'
   | 'head_and_shoulders'
   | 'three_drives'
-  | 'extended_line';
+  | '3divers_pattern'
+  // نشانگرها
+  | 'arrow'
+  | 'icon'
+  | 'balloon'
+  | 'callout'
+  | 'text'
+  | 'note'
+  // استراتژی‌های ترکیبی
+  | 'ma_cross'           // 2 میانگین متحرک
+  | 'rsi_divergence'     // RSI + خط روند + خط روی RSI
+  | 'rsi_signal'         // RSI + entry marker
+  | 'macd_divergence'    // MACD + خط روند + خط روی MACD
+  // اندیکاتورها
+  | 'indicator_IchimokuCloud'
+  | 'indicator_MASimple'
+  | 'indicator_MAWeighted'
+  | 'indicator_MAExponential'
+  | 'indicator_RSI'
+  | 'indicator_MACD'
+  | 'indicator_Volume';
 ```
 
 ### ChartPoint
@@ -456,22 +481,10 @@ widget.activeChart().onIntervalChanged().subscribe(null, () => {
 ```typescript
 import { NXCChartShapes, type APISignal } from 'nxc-chart-shapes';
 
-// تنظیم استراتژی‌ها
-const STRATEGIES = {
-  315: {
-    id: 315,
-    name: 'Trend Line',
-    shapeType: 'trend_line' as const,
-    pointCount: 2,
-    colors: { buy: '#4caf50', sell: '#f44336' }
-  }
-};
-
-// ساخت instance
+// ساخت instance (بدون نیاز به تعریف strategies - همه built-in هستند)
 const shapes = new NXCChartShapes({
   theme: 'dark',
-  showEntryMarker: true,
-  strategies: STRATEGIES
+  showEntryMarker: true
 });
 
 // اتصال به widget
@@ -482,8 +495,8 @@ await shapes.attach(widget);
 const response = await fetch('https://api.nexcrypto.trade/v1/signals/...');
 const signal: APISignal = await response.json();
 
-// رسم
-const shapeIds = shapes.draw(signal);
+// رسم (async)
+const shapeIds = await shapes.draw(signal);
 console.log('Drew shapes:', shapeIds);
 
 // بعداً: حذف
@@ -495,3 +508,27 @@ shapes.clear();
 // در پایان
 shapes.destroy();
 ```
+
+## Built-in Strategy Registry
+
+کتابخانه **500+ استراتژی** را به صورت built-in دارد:
+
+| Range | نوع | توضیح |
+|-------|-----|-------|
+| 1-30 | Ichimoku | ابر ایچیموکو |
+| 31-120 | Moving Averages | SMA, WMA, EMA با length های مختلف |
+| 121-180 | MA Cross | تقاطع میانگین‌ها |
+| 181-214 | Signal Only | فقط entry marker |
+| 215-220 | RSI Divergence | واگرایی RSI |
+| 249-256 | MACD | اندیکاتور MACD |
+| 269-278 | RSI Signal | سیگنال RSI |
+| 289-292 | MACD Divergence | واگرایی MACD |
+| 301-306 | 3 Divers | الگوی 3 Divers |
+| 310-339 | Rectangles & Lines | زون‌ها و خطوط |
+| 342-361 | Channels | کانال موازی |
+| 364-407 | Triangles | الگوی مثلث |
+| 408-433 | Fibonacci | فیبوناچی با فلش |
+| 464-495 | Harmonic Patterns | ABCD, XABCD, etc. |
+| 505-506 | Head & Shoulders | سر و شانه |
+
+**نیازی به تعریف دستی این استراتژی‌ها نیست.**
