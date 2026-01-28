@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Vendor (TradingView library is proprietary)
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Temp files
+*.tmp
+*.temp

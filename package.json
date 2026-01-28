@@ -1,0 +1,54 @@
+{
+  "name": "nxc-chart-shapes",
+  "version": "1.0.0",
+  "description": "TradingView chart shapes library for NexCryptoTrade",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "browser": "dist/umd/nxc-chart-shapes.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:umd && npm run build:types",
+    "build:esm": "tsc --project tsconfig.esm.json",
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "build:umd": "rollup -c rollup.config.js",
+    "build:types": "tsc --project tsconfig.types.json",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "tradingview",
+    "charting",
+    "signals",
+    "trading",
+    "crypto"
+  ],
+  "author": "NexCryptoTrade",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^4.9.6",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "tradingview-charting-library": "*"
+  },
+  "peerDependenciesMeta": {
+    "tradingview-charting-library": {
+      "optional": true
+    }
+  }
+}
