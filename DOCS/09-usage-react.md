@@ -15,48 +15,33 @@ my-react-app/
 ├── src/
 │   ├── components/
 │   │   └── TradingChart.tsx
-│   ├── hooks/
-│   │   └── useSignals.ts
-│   └── config/
-│       └── strategies.ts
+│   └── hooks/
+│       └── useSignals.ts
 └── package.json
 ```
 
-## پیکربندی Strategies
+## Strategies (Built-in)
+
+**نیازی به تعریف strategies نیست!** کتابخانه 500+ استراتژی را built-in دارد:
+
+- Ichimoku (1-30)
+- SMA/WMA/EMA (31-120)
+- MA Cross (121-180)
+- RSI Divergence (215-220, 277-278)
+- MACD Divergence (289-292)
+- Trend Lines, Channels, Patterns, etc.
+
+فقط اگر strategy سفارشی نیاز دارید:
 
 ```typescript
-// src/config/strategies.ts
-
-import type { StrategyConfig } from 'nxc-chart-shapes';
-
-export const STRATEGIES: Record<number, StrategyConfig> = {
-  315: {
-    id: 315,
-    name: 'Trend Line',
-    shapeType: 'trend_line',
-    pointCount: 2,
-    colors: { buy: '#4caf50', sell: '#f44336' }
-  },
-  293: {
-    id: 293,
-    name: 'Channel Pattern',
-    shapeType: 'parallel_channel',
-    pointCount: 4,
-    colors: { buy: '#00bcd4', sell: '#e91e63' }
-  },
-  320: {
-    id: 320,
-    name: 'Support/Resistance',
+// اختیاری - فقط برای override یا strategy جدید
+const CUSTOM_STRATEGIES = {
+  999: {
+    id: 999,
+    name: 'My Custom',
     shapeType: 'rectangle',
     pointCount: 2,
-    colors: { buy: '#009688', sell: '#e91e63' }
-  },
-  330: {
-    id: 330,
-    name: 'Fibonacci',
-    shapeType: 'fib_retracement',
-    pointCount: 2,
-    colors: { buy: '#9c27b0', sell: '#ff5722' }
+    colors: { buy: '#00ff00', sell: '#ff0000' }
   }
 };
 ```
@@ -125,7 +110,6 @@ export function useSignals() {
 
 import { useEffect, useRef, useCallback } from 'react';
 import { NXCChartShapes, type APISignal } from 'nxc-chart-shapes';
-import { STRATEGIES } from '../config/strategies';
 
 // TypeScript declaration for TradingView
 declare global {
@@ -176,17 +160,15 @@ export function TradingChart({
       ]
     });
 
-    widgetRef.current.onChartReady(() => {
-      // Initialize shapes
+    widgetRef.current.onChartReady(async () => {
+      // Initialize shapes (strategies are built-in)
       shapesRef.current = new NXCChartShapes({
         theme,
-        showEntryMarker: true,
-        strategies: STRATEGIES
+        showEntryMarker: true
       });
 
-      shapesRef.current.attach(widgetRef.current).then(() => {
-        onChartReady?.();
-      });
+      await shapesRef.current.attach(widgetRef.current);
+      onChartReady?.();
     });
 
     return () => {
@@ -202,6 +184,7 @@ export function TradingChart({
     shapesRef.current.clear();
 
     if (signals.length > 0) {
+      // draw() is async for indicators/divergence
       shapesRef.current.draw(signals);
     }
   }, [signals]);
@@ -412,10 +395,10 @@ src/
 ├── hooks/
 │   ├── useSignals.ts
 │   └── useTradingView.ts
-├── config/
-│   └── strategies.ts
 ├── types/
 │   └── index.ts
 └── styles/
     └── chart.css
 ```
+
+**نکته:** فایل `config/strategies.ts` نیاز نیست چون همه strategies در کتابخانه built-in هستند.

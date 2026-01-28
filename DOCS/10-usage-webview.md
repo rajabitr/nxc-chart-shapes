@@ -66,24 +66,8 @@
     let tvWidget = null;
     let shapesManager = null;
 
-    // تنظیم استراتژی‌ها
-    const STRATEGIES = {
-      315: {
-        id: 315,
-        name: 'Trend Line',
-        shapeType: 'trend_line',
-        pointCount: 2,
-        colors: { buy: '#4caf50', sell: '#f44336' }
-      },
-      293: {
-        id: 293,
-        name: 'Channel',
-        shapeType: 'parallel_channel',
-        pointCount: 4,
-        colors: { buy: '#00bcd4', sell: '#e91e63' }
-      }
-      // ... سایر strategy ها
-    };
+    // نکته: نیازی به تعریف STRATEGIES نیست!
+    // کتابخانه 500+ استراتژی را built-in دارد
 
     // Datafeed ساده
     const datafeed = {
@@ -155,19 +139,19 @@
         ]
       });
 
-      tvWidget.onChartReady(() => {
+      tvWidget.onChartReady(async () => {
+        // Strategies are built-in - no need to define!
         shapesManager = new NXCChartShapes.default({
           theme: 'dark',
-          showEntryMarker: true,
-          strategies: STRATEGIES
+          showEntryMarker: true
         });
 
-        shapesManager.attach(tvWidget).then(() => {
-          // اطلاع به native app
-          if (window.NativeApp) {
-            window.NativeApp.onChartReady();
-          }
-        });
+        await shapesManager.attach(tvWidget);
+
+        // اطلاع به native app
+        if (window.NativeApp) {
+          window.NativeApp.onChartReady();
+        }
       });
     }
 
@@ -179,7 +163,7 @@
      * رسم سیگنال‌ها
      * @param {string} jsonSignals - آرایه JSON از سیگنال‌ها
      */
-    window.drawSignals = function(jsonSignals) {
+    window.drawSignals = async function(jsonSignals) {
       if (!shapesManager || !shapesManager.isReady()) {
         console.error('Chart not ready');
         return false;
@@ -188,7 +172,8 @@
       try {
         const signals = JSON.parse(jsonSignals);
         shapesManager.clear();
-        const ids = shapesManager.draw(signals);
+        // draw() is async for indicators/divergence
+        const ids = await shapesManager.draw(signals);
         return ids.length;
       } catch (e) {
         console.error('Error drawing signals:', e);
