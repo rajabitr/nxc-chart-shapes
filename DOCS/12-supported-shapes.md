@@ -277,6 +277,126 @@
 }
 ```
 
+## اندیکاتورها (Indicators)
+
+کتابخانه از اندیکاتورهای TradingView پشتیبانی می‌کند:
+
+| shapeType | نام | توضیح |
+|-----------|-----|-------|
+| `indicator_IchimokuCloud` | ایچیموکو | ابر ایچیموکو |
+| `indicator_MASimple` | SMA | میانگین متحرک ساده |
+| `indicator_MAWeighted` | WMA | میانگین متحرک وزنی |
+| `indicator_MAExponential` | EMA | میانگین متحرک نمایی |
+| `indicator_RSI` | RSI | شاخص قدرت نسبی |
+| `indicator_MACD` | MACD | مکدی |
+| `indicator_Volume` | Volume | حجم معاملات |
+
+### Strategy IDs برای اندیکاتورها
+
+```javascript
+// Ichimoku Cloud: 1-30, 496, 497
+// SMA 10: 31-34, 51-52
+// SMA 20: 35-38, 53-54
+// SMA 50: 39-42, 55-56
+// SMA 100: 43-46, 57-58
+// SMA 200: 47-50, 59-60
+// WMA 10: 61-64, 81-82
+// WMA 20: 65-68, 83-84
+// WMA 50: 69-72, 85-86
+// WMA 100: 73-76, 87-88
+// WMA 200: 77-80, 89-90
+// EMA 10: 91-94, 111-112
+// EMA 20: 95-98, 113-114
+// EMA 50: 99-102, 115-116
+// EMA 100: 103-106, 117-118
+// EMA 200: 107-110, 119-120
+```
+
+## MA Cross Strategies (121-180)
+
+این استراتژی‌ها **دو** میانگین متحرک رسم می‌کنند:
+
+| Strategy IDs | نام | توضیح |
+|--------------|-----|-------|
+| 121-140 | SMA Crossover | تقاطع SMA ها |
+| 141-160 | WMA Crossover | تقاطع WMA ها |
+| 161-180 | EMA Crossover | تقاطع EMA ها |
+
+```javascript
+// مثال: SMA50 crosses SMA200 (Golden Cross / Death Cross)
+// strategy_id: 137 (crosses up), 138 (crosses down)
+// نتیجه: دو اندیکاتور SMA50 و SMA200 روی چارت رسم می‌شود
+```
+
+## RSI Divergence (215-220, 277-278)
+
+این استراتژی **4 شکل** رسم می‌کند:
+
+1. **RSI Indicator** - اندیکاتور RSI در پنل جداگانه
+2. **Trend Line روی چارت قیمت** - از p1 به p2
+3. **Trend Line روی RSI pane** - از p3 به p4 (با `ownerStudyId: 'RSI'`)
+4. **Entry Marker** - خط عمودی در نقطه ورود
+
+### فرمت Payload برای RSI Divergence
+
+```json
+{
+  "payload": {
+    "p1p": "88000",      // قیمت نقطه 1 (روی چارت قیمت)
+    "p1t": 1769400000,
+    "p2p": "87500",      // قیمت نقطه 2 (روی چارت قیمت)
+    "p2t": 1769450000,
+    "p3p": "48.79",      // مقدار RSI نقطه 1 (روی RSI pane)
+    "p3t": 1769400000,
+    "p4p": "47.96",      // مقدار RSI نقطه 2 (روی RSI pane)
+    "p4t": 1769450000,
+    "entryPoint": 1769450000
+  }
+}
+```
+
+## MACD Divergence (289-292)
+
+مشابه RSI Divergence، **4 شکل** رسم می‌کند:
+
+1. **MACD Indicator** - اندیکاتور MACD در پنل جداگانه
+2. **Trend Line روی چارت قیمت** - از p1 به p2
+3. **Trend Line روی MACD pane** - از p3 به p4 (با `ownerStudyId: 'MACD'`)
+4. **Entry Marker** - خط عمودی در نقطه ورود
+
+## ownerStudyId - رسم روی پنل اندیکاتور
+
+برای رسم شکل روی پنل اندیکاتور (مثل RSI یا MACD) از `ownerStudyId` استفاده کنید:
+
+```javascript
+{
+  type: 'trend_line',
+  points: [point1, point2],
+  overrides: {
+    linecolor: '#ff0000',
+    linewidth: 2,
+    ownerStudyId: 'RSI',  // رسم روی پنل RSI
+    // یا: ownerStudyId: 'MACD'  // رسم روی پنل MACD
+  }
+}
+```
+
+**نکته مهم:** اول باید اندیکاتور ساخته شود، بعد شکل روی آن رسم شود. کتابخانه این کار را خودکار انجام می‌دهد.
+
+## extendRight - امتداد خطوط
+
+همه خطوط روند (trend_line) به صورت پیش‌فرض `extendRight: true` دارند:
+
+```javascript
+{
+  type: 'trend_line',
+  overrides: {
+    extendRight: true,   // خط به سمت راست امتداد می‌یابد
+    extendLeft: false
+  }
+}
+```
+
 ## نکات مهم
 
 1. **entryPoint همیشه الزامی است** - حتی اگر شکل نقاط دیگر داشته باشد
@@ -289,4 +409,8 @@
    - `"B"` (Buy) → رنگ سبز
    - `"S"` (Sell) → رنگ قرمز
 
-5. **strategy_id باید در registry ثبت شده باشد** - وگرنه شکل رسم نمی‌شود
+5. **strategy_id باید در registry ثبت شده باشد** - وگرنه از auto-detection استفاده می‌شود
+
+6. **Divergence ها 4 نقطه دارند** - p1,p2 برای چارت قیمت، p3,p4 برای پنل اندیکاتور
+
+7. **MA Cross ها 2 اندیکاتور رسم می‌کنند** - هر دو MA روی چارت نمایش داده می‌شوند
