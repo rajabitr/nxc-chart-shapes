@@ -352,8 +352,9 @@
 
   <script>
     // Configuration
-    const API_BASE = '/api/v1';
+    const API_BASE = 'https://apis.nexcrypto.trade/v1';
     const API_KEY = 'MOaNJZ3ZitI1ZSOEf0BATXH1Q0sxP5lnbReA_LZRFbE';
+    const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozNiwic2Vzc2lvbl9pZCI6MTExLCJlbWFpbCI6Im5leGNyeXB0b3RyYWRlQGdtYWlsLmNvbSIsInJvbGUiOiJ1c2VyIiwiaXNzIjoibmV4Y3J5cHRvLWFwaSIsInN1YiI6Im5leGNyeXB0b3RyYWRlQGdtYWlsLmNvbSIsImV4cCI6MTc3MDMwNDAwOCwibmJmIjoxNzcwMjg5NjA4LCJpYXQiOjE3NzAyODk2MDh9.meRaIhjB07sQKLSxqP1gpP_SWKUPPS18hViSFLuxNTU';
 
     // Global state
     let tvWidget = null;
@@ -425,7 +426,8 @@
           const response = await fetch(url, {
             headers: {
               'Accept': 'application/json',
-              'X-API-Key': API_KEY
+              'X-API-Key': API_KEY,
+              'Authorization': `Bearer ${ACCESS_TOKEN}`
             }
           });
 
@@ -465,11 +467,12 @@
       log(`Fetching signals for ${symbol}...`, 'info');
 
       try {
-        const url = `${API_BASE}/signals?symbol=${symbol}&exchange_id=${exchangeId}&timeframe_min=${timeframe}&countback=${countback}&payload=1`;
+        const url = `${API_BASE}/me/signals/all?symbol=${symbol}&exchange_id=${exchangeId}&timeframe_min=${timeframe}&countback=${countback}&payload=1&limit=5000`;
         const response = await fetch(url, {
           headers: {
             'Accept': 'application/json',
-            'X-API-Key': API_KEY
+            'X-API-Key': API_KEY,
+            'Authorization': `Bearer ${ACCESS_TOKEN}`
           }
         });
 
